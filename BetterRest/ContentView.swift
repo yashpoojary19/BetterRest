@@ -12,56 +12,42 @@ struct ContentView: View {
     @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1
     
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
-    @State private var showingAlert = false
     
+
     var body: some View {
         NavigationView {
             Form {
-                VStack(alignment: .leading, spacing: 10) {
-        
-                    Text("What time do you want to wake up?")
-                        .font(.headline)
+                    Section(header: Text("What time do you want to wake up?")) {
                     
-                    DatePicker("Please enter a wake time", selection: $wakeUp, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
+                        DatePicker("Please enter a wake time", selection: $wakeUp, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
                 }
                 
-                VStack(alignment: .leading, spacing: 10) {
-                
-                    Text("Desired Amount of sleep")
-                        .font(.headline)
-                    
-                    Stepper(value: $sleepAmount, in: 4...12, step: 0.25) {
-                        Text("\(sleepAmount, specifier: "%g")")
-                    }
-                }
-                
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Daily coffee intake")
-                        .font(.headline)
-                    
-                    Stepper(value: $coffeeAmount, in: 1...20) {
-                        if coffeeAmount == 1 {
-                            Text("1 cup")
-                        } else {
-                            Text("\(coffeeAmount) cups")
+                    Section(header: Text("Desired Amount of sleep")) {
+                        
+                        Stepper(value: $sleepAmount, in: 4...12, step: 0.25) {
+                            Text("\(sleepAmount, specifier: "%g")")
                         }
+                }
+                
+                Section {
+
+                    Picker("Daily Coffee Intake", selection: $coffeeAmount) {
+                        ForEach (1..<21) {
+                                Text("\($0) \(cupCount(of: $0))")
+                        }
+                    
+//
                         
                     }
                 }
+                
+                Section(header: Text("Your recommended bedtime is ")) {
+                    Text(calculateBedTime())
+                        .font(.largeTitle)
+                }
             }
             .navigationBarTitle("Better Rest")
-            .navigationBarItems(trailing:
-                Button(action: calculateBedTime) {
-                    Text("Calculate")
-    
-                }
-            )
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("Ok")))
-            }
         }
         
     }
@@ -73,9 +59,18 @@ struct ContentView: View {
         return Calendar.current.date(from: components) ?? Date()
     }
     
+    func cupCount(of coffeeAmount: Int) -> String {
+        if coffeeAmount == 1 {
+            return "Cup"
+        } else {
+            return "Cups"
+        }
+
+    }
     
     
-    func calculateBedTime() {
+    
+    func calculateBedTime() -> String {
         let model = SleepCalculator()
         
         let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
@@ -90,17 +85,12 @@ struct ContentView: View {
             let formatter = DateFormatter()
             formatter.timeStyle = .short
             
-            alertMessage = formatter.string(from: sleepTime)
-            alertTitle = "Your ideal bed time is"
+            return formatter.string(from: sleepTime)
             
             
         } catch {
-             alertTitle = "Error Message"
-            alertMessage = "Sorry, there was a problem calculating the bedtime. "
-            
-            
+            return "Sorry, there was a problem calculating your estimate"
         }
-        showingAlert = true
     }
     
    
